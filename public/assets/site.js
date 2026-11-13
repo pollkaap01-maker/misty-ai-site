@@ -9,7 +9,7 @@ const works=[
  ['gift','Особенный повод','Ролик для гендер-пати','07'],
  ['trend','Трендовый AI-формат','Человек-паук','08']
 ];
-const list=document.getElementById('work-list');works.forEach(([category,title,desc,id])=>{const card=document.createElement('article');card.className='work';card.dataset.category=category;card.dataset.videoId=id;card.setAttribute('aria-label','Смотреть видео: '+desc);const visual=document.createElement('div');visual.className='work-visual';const thumb=document.createElement('img');thumb.src='videos/'+id+'.jpg';thumb.alt=desc;thumb.loading='lazy';thumb.onerror=()=>{thumb.hidden=true;visual.classList.add('thumbnail-fallback')};visual.append(thumb);const overlay=document.createElement('span');overlay.className='play';overlay.textContent='▶';visual.append(overlay);const a=document.createElement('button');a.type='button';a.className='video-open';a.dataset.videoId=id;a.setAttribute('aria-label','Смотреть: '+desc);a.style.cssText='position:absolute;inset:0';visual.append(a);const info=document.createElement('div');info.className='work-info';const strong=document.createElement('strong');strong.textContent=title;const p=document.createElement('p');p.textContent=desc;const link=document.createElement('button');link.type='button';link.className='video-text';link.dataset.videoId=id;link.textContent='Смотреть на сайте ▶';info.append(strong,p,link);card.append(visual,info);list.append(card)});
+const list=document.getElementById('work-list');works.forEach(([category,title,desc,id])=>{const card=document.createElement('article');card.className='work';card.dataset.category=category;card.dataset.videoId=id;card.setAttribute('aria-label','Смотреть видео: '+desc);const visual=document.createElement('div');visual.className='work-visual';const thumb=document.createElement('img');thumb.src=(window.MISTY_ASSET_PREFIX||'')+'videos/'+id+'.jpg';thumb.alt=desc;thumb.loading='lazy';thumb.onerror=()=>{thumb.hidden=true;visual.classList.add('thumbnail-fallback')};visual.append(thumb);const overlay=document.createElement('span');overlay.className='play';overlay.textContent='▶';visual.append(overlay);const a=document.createElement('button');a.type='button';a.className='video-open';a.dataset.videoId=id;a.setAttribute('aria-label','Смотреть: '+desc);a.style.cssText='position:absolute;inset:0';visual.append(a);const info=document.createElement('div');info.className='work-info';const strong=document.createElement('strong');strong.textContent=title;const p=document.createElement('p');p.textContent=desc;const link=document.createElement('button');link.type='button';link.className='video-text';link.dataset.videoId=id;link.textContent='Смотреть на сайте ▶';info.append(strong,p,link);card.append(visual,info);list.append(card)});
 document.querySelectorAll('.filter').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.filter').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b))});list.querySelectorAll('.work').forEach(w=>w.hidden=b.dataset.filter!=='all'&&w.dataset.category!==b.dataset.filter)}));
 })();
 
@@ -20,10 +20,10 @@ const close=()=>{modal.hidden=true;player.pause();player.removeAttribute('src');
 document.getElementById('work-list').addEventListener('click',e=>{
 const button=e.target.closest('button[data-video-id]');if(!button)return;
 opener=button;const card=button.closest('.work'),id=button.dataset.videoId;
-player.src='videos/'+id+'.mp4';player.poster='videos/'+id+'.jpg';player.load();player.play().catch(()=>{});
+player.src=(window.MISTY_ASSET_PREFIX||'')+'videos/'+id+'.mp4';player.poster=(window.MISTY_ASSET_PREFIX||'')+'videos/'+id+'.jpg';player.load();player.play().catch(()=>{});
 player.title=card.querySelector('.work-info p').textContent;
 document.querySelector('.misty-video-bar strong').textContent=player.title;
-document.getElementById('misty-video-external').href='videos/'+id+'.mp4';
+document.getElementById('misty-video-external').href=(window.MISTY_ASSET_PREFIX||'')+'videos/'+id+'.mp4';
 modal.hidden=false;document.body.style.overflow='hidden';document.querySelector('header').inert=true;document.querySelector('main').inert=true;document.querySelector('footer').inert=true;document.getElementById('misty-video-close').focus();
 });
 document.getElementById('misty-video-close').addEventListener('click',close);

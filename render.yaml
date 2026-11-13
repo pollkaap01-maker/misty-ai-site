@@ -1,0 +1,17 @@
+# Static site: no paid web service, no disk, no database, no CRM.
+services:
+  - type: web
+    name: misty-ai-video
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: public
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: DENY

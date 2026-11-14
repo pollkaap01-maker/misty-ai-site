@@ -43,30 +43,28 @@ function render(){
 }
 render();
 const toggle=document.getElementById('request-open'),section=document.getElementById('application'),form=document.getElementById('lead-form'),status=document.getElementById('lead-status');
-toggle.addEventListener('click',()=>{section.hidden=false;toggle.setAttribute('aria-expanded','true');section.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});form.querySelector('[name=name]').focus({preventScroll:true})});
-const phone=form.querySelector('[name=phone]'),email=form.querySelector('[name=email]'),telegram=form.querySelector('[name=telegram]'),preferred=form.querySelector('[name=preferredContact]');
+const openers=document.querySelectorAll('[data-request-open],#request-open');
+openers.forEach(opener=>opener.addEventListener('click',e=>{e.preventDefault();section.hidden=false;openers.forEach(x=>x.setAttribute('aria-expanded','true'));section.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});form.querySelector('[name=name]').focus({preventScroll:true});document.querySelector('.navlinks').classList.remove('is-open');document.querySelector('.menu-toggle').setAttribute('aria-expanded','false')}));
+const phone=form.querySelector('[name=phone]'),email=form.querySelector('[name=email]'),telegram=form.querySelector('[name=telegram]'),preferred=form.querySelector('[name=preferredContact]'),extraEmail=form.querySelector('[name=extraEmail]');
 function contactValidity(){
- const method=preferred.value,p=phone.value.trim(),e=email.value.trim(),t=telegram.value.trim();
- phone.setCustomValidity('');email.setCustomValidity('');telegram.setCustomValidity('');
- phone.required=['Звонок','WhatsApp'].includes(method);email.required=method==='E-mail';telegram.required=method==='Telegram';
- document.getElementById('telegram-contact').hidden=method!=='Telegram';
- if(phone.required&&!p)phone.setCustomValidity('Для звонка или WhatsApp укажите телефон.');
- else if(p&&p.replace(/\D/g,'').length<7)phone.setCustomValidity('Проверьте номер телефона.');
- if(email.required&&!e)email.setCustomValidity('Для ответа по e-mail укажите адрес почты.');
- if(method==='Telegram'&&t&&!/^@?[A-Za-z][A-Za-z0-9_]{4,31}$/.test(t))telegram.setCustomValidity('Укажите Telegram-ник, например @username.');
- if(method==='Telegram'&&!t)telegram.setCustomValidity('Укажите ник, по которому мы сможем написать вам в Telegram.');
- if(!p&&!e&&!(method==='Telegram'&&t)){if(!phone.required&&!email.required&&!telegram.required)phone.setCustomValidity('Укажите телефон или e-mail.');}
+ const method=preferred.value;
+ const phoneNeeded=['Звонок','WhatsApp'].includes(method),emailNeeded=method==='E-mail',telegramNeeded=method==='Telegram';
+ [[phone,phoneNeeded,'phone-contact'],[email,emailNeeded,'email-contact'],[telegram,telegramNeeded,'telegram-contact']].forEach(([el,needed,id])=>{el.required=needed;el.disabled=!needed;el.setCustomValidity('');document.getElementById(id).hidden=!needed});
+ extraEmail.disabled=emailNeeded;document.getElementById('extra-email-contact').hidden=emailNeeded;
+ if(phoneNeeded&&phone.value.trim()&&phone.value.replace(/\D/g,'').length<7)phone.setCustomValidity('Проверьте номер телефона.');
+ if(telegramNeeded&&telegram.value.trim()&&!/^@?[A-Za-z][A-Za-z0-9_]{4,31}$/.test(telegram.value.trim()))telegram.setCustomValidity('Укажите Telegram-ник, например @username.');
 }
+extraEmail.addEventListener('invalid',()=>{form.querySelector('.optional-fields').open=true;});
 [phone,email,telegram].forEach(el=>el.addEventListener('input',contactValidity));preferred.addEventListener('change',contactValidity);contactValidity();
 const privacy=document.getElementById('privacy-link');privacy.href=PRIVACY_POLICY_URL;
 if(PRIVACY_POLICY_URL==='PRIVACY_POLICY_URL')privacy.addEventListener('click',e=>{e.preventDefault();status.textContent='Ссылка на политику конфиденциальности пока не предоставлена студией. Уточните её в Telegram.'});
 form.addEventListener('submit',async e=>{
- e.preventDefault();contactValidity();if(!form.reportValidity())return;
+ e.preventDefault();contactValidity();if(!extraEmail.disabled&&!extraEmail.checkValidity()){form.querySelector('.optional-fields').open=true;}if(!form.reportValidity())return;
  if(MistyPricing.price(selected)===null){status.textContent='Сначала выберите формат проекта в калькуляторе.';return;}
  if(location.protocol==='file:'){status.textContent='Для отправки заявки откройте опубликованный сайт. Локальный HTML подходит для просмотра дизайна и расчёта.';return;}
  const button=form.querySelector('[type=submit]');button.disabled=true;status.textContent='Отправляем заявку…';
  try{
-  const raw=Object.fromEntries(new FormData(form));
+  const raw=Object.fromEntries(new FormData(form));raw.email=preferred.value==='E-mail'?(raw.email||''):(raw.extraEmail||'');raw.phone=raw.phone||'';raw.telegram=raw.telegram||'';
   if(raw.website){status.textContent='Не удалось отправить заявку. Повторите попытку.';return;}
   const payload={name:raw.name.trim(),...(raw.email.trim()?{email:raw.email.trim()}:{}),'Телефон':raw.phone.trim()||'Не указан','Удобный способ связи':raw.preferredContact,...(raw.preferredContact==='Telegram'?{'Telegram':raw.telegram.trim()}:{}),'Компания/бренд':raw.company.trim()||'Не указана','Задача/материалы':raw.comment.trim()||'Не указаны','Желаемый срок запуска':raw.deadline||'Не указан','Параметры проекта':summaryText(),'Предварительная стоимость':'от '+MistyPricing.price(selected).toLocaleString('ru-RU')+' ₽','Согласие на обработку данных':'Да, '+new Date().toISOString(),_subject:'Новая заявка с сайта MISTY AI',_template:'table',_captcha:'false',_honey:raw.website};
   // Existing owner-approved email delivery. CRM_WEBHOOK_URL is deliberately NOT called.
